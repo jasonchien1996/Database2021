@@ -1,0 +1,40 @@
+LOAD CSV WITH HEADERS FROM "file:///hw6_student_data.csv"
+AS line FIELDTERMINATOR ',' CREATE (p:Student { 身份: line.身份, 系所: line.系所, 學號: line.學號, 姓名: line.姓名})
+RETURN p;
+
+
+MATCH (self: Student {學號: 'r09922146'})
+MATCH (peer: Student {系所: "資工系碩士班_一年級 "}) WHERE NOT peer.學號 = 'r09922146'
+CREATE (self)-[rel:peer]->(peer);
+
+
+MATCH (selfAndPeer: Student {系所: "資工系碩士班_一年級 "})
+return collect(selfAndPeer);
+
+
+LOAD CSV WITH HEADERS FROM "file:///hw6_hobbies.csv" AS row FIELDTERMINATOR ','
+CREATE (all:Student { 學號: row.學號, 姓名: row.姓名, hobbies: [row.hobby1, row.hobby2, row.hobby3, row.hobby4, row.hobby5]})
+return all;
+
+
+MATCH (self: Student {學號: "r07228005"}), (friend: Student) 
+WHERE ANY(x IN self.hobbies where x IN friend.hobbies) AND NOT friend.學號 = "r07228005"
+WITH self, friend
+MATCH (self), (friend)
+CREATE (self)-[rel:IS_FRIENDS_WITH]->(friend)
+WITH self, friend
+MATCH (friend), (foaf)
+WHERE ANY(x IN friend.hobbies WHERE x IN foaf.hobbies) AND NOT foaf.學號 = "r07228005" AND NOT exists((self)-[:IS_FRIENDS_WITH]->(foaf))
+RETURN collect(DISTINCT foaf.姓名), foaf.hobbies;
+
+
+MATCH (self: Student {學號: "r07228005"}), (friend: Student) 
+WHERE ANY(x IN self.hobbies where x IN friend.hobbies) AND NOT friend.學號 = "r07228005"
+WITH self, friend
+MATCH (self), (friend)
+CREATE (self)-[rel:IS_FRIENDS_WITH]->(friend)
+WITH self, friend
+MATCH (friend), (foaf)
+WHERE ANY(x IN friend.hobbies WHERE x IN foaf.hobbies) AND NOT foaf.學號 = "r07228005" AND NOT exists((self)-[:IS_FRIENDS_WITH]->(foaf))
+UNWIND foaf.hobbies AS NH
+return DISTINCT NH;

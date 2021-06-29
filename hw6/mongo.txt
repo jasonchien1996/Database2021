@@ -1,0 +1,66 @@
+mongoimport --db hw6 --collection students --drop --type csv --headerline --file /home/jason/Downloads/hw6_student_data.csv
+use hw6
+db.students.find({學號:"r09922146"})
+
+
+db.students.find({$and: [{系所: "資工系碩士班_一年級"}, {學號: {$ne: "r09922146"}}]})
+
+
+db.students.aggregate([{$group:{_id:{系所: "$系所"}, number:{$sum:1}}}])
+
+
+db.students.updateMany({}, {$set:{日期: new Date("2021-03-01")}})
+db.students.find({學號:"r09922146"})
+db.students.find({$and:[{系所:"資工系碩士班_一年級"},{學號:{$ne:"r09922146"}}]})
+
+
+db.students.insert([
+	{
+		身份:"旁聽生",
+		系所:"歷史系_一年級",
+		學號:"b09900201",
+		姓名:"小花",
+		日期:new Date("2021-06-02")
+	},
+	{
+		身份:"校內生",
+		系所:"歷史系_四年級",
+		學號:"b06900332",
+		姓名:"小草",
+		日期:new Date("2021-06-02")
+	},
+	{
+		身份:"校內生",
+		系所:"機械系_四年級",
+		學號:"b06502055",
+		姓名:"小天",
+		日期:new Date("2021-06-02")
+	},
+])
+
+db.students.find(
+   {
+      $or: [
+      	 {學號:"r09922146"},
+         {學號:"b09900201"},
+         {學號:"b06900332"},
+         {學號:"b06502055"},
+      ]
+   }
+)
+
+
+myupdate = function(Date) {
+ db.students.aggregate([
+ { $match: { 日期: { $lte: Date} }, },
+ { $group: { _id: {系所: "$系所"}, tally: { $sum: 1 } } },
+ { $merge: {
+    into: "students",
+    on: "_id",
+    whenMatched: "replace",
+    whenNotMatched: "insert"
+ }}
+ ]);
+};
+myupdate(new Date("2021-03-31"))
+myupdate(new Date("2021-06-10"))
